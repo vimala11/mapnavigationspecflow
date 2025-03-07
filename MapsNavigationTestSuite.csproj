@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Appium.WebDriver" Version="7.1.0" />
+        <PackageReference Include="ExtentReports" Version="4.1.0" /> <!-- Updated to latest stable -->
+        <PackageReference Include="Selenium.Support" Version="4.29.0" />
+        <PackageReference Include="Selenium.WebDriver" Version="4.29.0" />
+        <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="129.0.6668.5800" /> <!-- Matches Chrome 129, latest as of Oct 2024 -->
+        <PackageReference Include="SpecFlow" Version="3.9.74" />
+        <PackageReference Include="SpecFlow.NUnit" Version="3.9.74" />
+        <PackageReference Include="NUnit" Version="4.2.2" /> <!-- Latest NUnit -->
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" /> <!-- Latest -->
+        <PackageReference Include="SpecFlow.Tools.MsBuild.Generation" Version="3.9.74" />
+        <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="Tests\Features\*.feature">
+            <Generator>SpecFlowSingleFileGenerator</Generator>
+            <LastGenOutput>$(RelativeOutputPath)Tests\Features\%(Filename).feature.cs</LastGenOutput>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Main\Reports\" />
+    </ItemGroup>
+</Project>
