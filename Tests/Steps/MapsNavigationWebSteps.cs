@@ -1,11 +1,4 @@
-﻿using MapsNavigationTestSuite.Main.Drivers;
-using NUnit.Framework;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
-using TechTalk.SpecFlow;
-using System;
-
-namespace MapsNavigationTestSuite.Tests.Steps
+﻿namespace MapsNavigationTestSuite.Tests.Steps
 {
     [Binding]
     public class MapsNavigationWebSteps
@@ -48,7 +41,8 @@ namespace MapsNavigationTestSuite.Tests.Steps
         public void WhenIEnterAsTheStartingPoint(string start)
         {
             var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
-            var searchBox = wait.Until(drv => drv.FindElement(By.XPath("//input[@id='searchboxinput']")));
+            // var searchBox = wait.Until(drv => drv.FindElement(By.XPath("//input[@id='searchboxinput']")));
+            var searchBox = wait.Until(drv => drv.FindElement(By.XPath("//div[@id='directions-searchbox-0']//input")));
             searchBox.SendKeys(start);
             searchBox.SendKeys(Keys.Enter);
         }
@@ -57,8 +51,8 @@ namespace MapsNavigationTestSuite.Tests.Steps
         public void WhenIEnterAsTheDestination(string destination)
         {
             var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
-            var directionsButton = wait.Until(drv => drv.FindElement(By.XPath("//button[@data-value='Directions']")));
-            directionsButton.Click();
+            // var directionsButton = wait.Until(drv => drv.FindElement(By.XPath("//button[@data-value='Directions']")));
+            // directionsButton.Click();
             var destBox = wait.Until(drv => drv.FindElement(By.XPath("//div[@id='directions-searchbox-1']//input")));
             destBox.Clear();
             destBox.SendKeys(destination);
@@ -69,8 +63,16 @@ namespace MapsNavigationTestSuite.Tests.Steps
         public void ThenIShouldSeeDirectionsToTheSoliriusOffice()
         {
             var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(20)); // Longer wait
-            var directions = wait.Until(drv => drv.FindElement(By.XPath("//div[contains(@class, 'directions-trip')]")));
+            var directions = wait.Until(drv => drv.FindElement(By.XPath("//div[contains(@id, 'directions-trip')]")));
             Assert.That(directions.Displayed, Is.True, "Directions to Solirius Office not found!");
+        }
+
+        [WhenAttribute(@"I click on directions button")]
+        public void WhenIClickOnDirectionsButton()
+        {
+            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            var directionsButton = wait.Until(drv => drv.FindElement(By.Id("hArJGc")));
+            directionsButton.Click();
         }
     }
 }

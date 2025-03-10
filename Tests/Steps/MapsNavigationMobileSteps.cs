@@ -1,68 +1,75 @@
-﻿using MapsNavigationTestSuite.Main.Drivers;
-using NUnit.Framework;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Appium.Android; // For AndroidDriver
-using TechTalk.SpecFlow;
+﻿
+using MapsNavigationTestSuite.Main.Pages;
 
 namespace MapsNavigationTestSuite.Tests.Steps
 {
     [Binding]
     public class MapsNavigationMobileSteps
     {
-        private readonly AppiumDriverSetup _driverSetup = new();
-        private AndroidDriver _driver; // Back to AndroidDriver for mobile-specific methods
-
+        private readonly AppiumDriverSetup _driverSetup = new(); 
+        
+        // private static AppiumDriver _driver;
+        
+        
+        
+        private static BaseSteps _baseSteps = new BaseSteps();
+        
+        MapsMobilePage _mapsMobilePage = new MapsMobilePage(_baseSteps.Setup());
      
-        [BeforeScenario("mobile")] // Only for mobile scenarios
-        public void Setup()
-        {
-            _driver = (AndroidDriver)_driverSetup.InitializeDriver("mobile");
-        }
-        [AfterScenario("mobile")]
-        public void Teardown()
-        {
-            _driverSetup.QuitDriver();
-        }
+        // [BeforeScenario("mobile")] // Only for mobile scenarios
+        // public void SetupDriver()
+        // {
+        //     // _driver = (AppiumDriver)_driverSetup.InitializeDriver("mobile");
+        //     // BaseSteps baseSteps = new BaseSteps();
+        //     // baseSteps.Setup();
+        //     // _mapsMobilePage = new MapsMobilePage(baseSteps.Setup());
+        //     
+        // }
+        // [AfterScenario("mobile")]
+        // public void Teardown()
+        // {
+        //     _driverSetup.QuitDriver();
+        // }
        
 
         [Given(@"I have opened Google Maps on my Android device")]
         public void GivenIHaveOpenedGoogleMaps()
         {
-            Assert.That(_driver, Is.Not.Null, "Google Maps failed to open.");
+            
+            Assert.That(_mapsMobilePage, Is.Not.Null, "Google Maps failed to open.");
         }
 
         [When(@"I enter ""(.*)"" as the mobile starting point")]
         public void WhenIEnterMobileStartingPoint(string startingPoint)
         {
-            var searchBox = _driver.FindElement(By.Id("com.google.android.apps.maps:id/search_omnibox_text_box"));
-            searchBox.Click();
-            var editBox = _driver.FindElement(By.Id("com.google.android.apps.maps:id/search_omnibox_edit_text"));
-            editBox.SendKeys(startingPoint);
-            _driver.PressKeyCode(66); // Enter key - works with AndroidDriver
+            try
+            {
+                _mapsMobilePage.EnterStartLocation(startingPoint);
+                _mapsMobilePage.PressEnterKey();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to enter starting point: {ex.Message}");
+            }
+
         }
 
         [When(@"I enter ""(.*)"" as the mobile destination")]
-        public void WhenIEnterMobileDestination(string destination)
+        public void WhenIEnterMobileDestination(string destination){
+            _mapsMobilePage.EnterDestination(destination);
+            _mapsMobilePage.PressEnterKey();
+        }
+        
+        [When(@"I click on directions button on map")]
+        public void WhenIClickOnDirectionsButtonOnMap()
         {
-            var directionsButton = _driver.FindElement(By.Id("com.google.android.apps.maps:id/directions_button"));
-            directionsButton.Click();
-            var destinationBox = _driver.FindElement(By.XPath("//android.widget.EditText[@resource-id='com.google.android.apps.maps:id/destination_text']"));
-            destinationBox.SendKeys(destination);
-            _driver.PressKeyCode(66); // Enter key
+            _mapsMobilePage.DirectionsButton.Click();
         }
 
-        [When(@"I start navigation")]
-        public void WhenIStartNavigation()
+        [ThenAttribute(@"I should see available modes of travel to the Solirius Office")]
+        public void ThenIShouldSeeAvailableModesOfTravelToTheSoliriusOffice()
         {
-            var startButton = _driver.FindElement(By.Id("com.google.android.apps.maps:id/start_button"));
-            startButton.Click();
-        }
-
-        [Then(@"I should see mobile directions to the Solirius Office")]
-        public void ThenIShouldSeeMobileDirections()
-        {
-            var navigationPane = _driver.FindElement(By.Id("com.google.android.apps.maps:id/navigation_container"));
-            Assert.That(navigationPane.Displayed, Is.True, "Navigation directions not displayed.");
+            Assert.That(_mapsMobilePage.DirectionsModeTabs.Displayed, Is.True, "Direction mode tabs are not displayed.");
         }
     }
 }

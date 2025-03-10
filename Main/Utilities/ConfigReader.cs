@@ -1,6 +1,4 @@
-﻿using System.Configuration;
-
-namespace MapsNavigationTestSuite.Main.Utilities
+﻿namespace MapsNavigationTestSuite.Main.Utilities
 {
     public static class ConfigReader
     {

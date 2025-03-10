@@ -1,9 +1,4 @@
-﻿using System;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using System.Configuration;
-
-namespace MapsNavigationTestSuite.Main.Drivers
+﻿namespace MapsNavigationTestSuite.Main.Drivers
 {
     public class SeleniumDriverSetup
     {
