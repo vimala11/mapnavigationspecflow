@@ -16,7 +16,6 @@ namespace MapsNavigationTestSuite.Main.Drivers
             {
                 var options = new AppiumOptions();
                 options.PlatformName = ConfigurationManager.AppSettings["PlatformName"] ?? "Android";
-                // options.PlatformName = ConfigurationManager.AppSettings["PlatformName"] ?? "iOS";
                 options.PlatformVersion = ConfigurationManager.AppSettings["PlatformVersion"] ?? "15";
                 options.DeviceName = ConfigurationManager.AppSettings["DeviceName"] ?? "Pixel_7";
                 options.AutomationName = ConfigurationManager.AppSettings["AutomationName"] ?? "UiAutomator2";
@@ -33,16 +32,27 @@ namespace MapsNavigationTestSuite.Main.Drivers
                 {
                     options.AddAdditionalAppiumOption("uiautomator2ServerLaunchTimeout", 120000);
                     _driver = new AndroidDriver(new Uri(appiumServer), options); // Mobile uses AndroidDriver
-                } else if (options.PlatformName == "IOS")
+                } else if (options.PlatformName == "iOS")
                 {
-                    _driver = new IOSDriver(new Uri(appiumServer), options); // Mobile uses AndroidDriver   
+                    options.AddAdditionalAppiumOption("wdaLaunchTimeout", 120000);
+                    options.AddAdditionalAppiumOption("wdaConnectionTimeout", 120000);
+                    options.AddAdditionalAppiumOption("commandTimeouts", 120000);
+                    try
+                    {
+                        _driver = new IOSDriver(new Uri(appiumServer), options); // Mobile uses iOSDriver   
+                        var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(60));
+                        wait.Until(d => d.PageSource != null);
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine($"Error starting driver: {ex.Message}");
+                    }
                 }
 
             }
             Console.WriteLine($"Initializing driver for: {testType}");
             return _driver;
         }
-
         public void QuitDriver()
         {
             _driver?.Quit();

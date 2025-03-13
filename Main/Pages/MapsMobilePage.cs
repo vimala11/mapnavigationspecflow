@@ -1,77 +1,66 @@
-﻿using MapsNavigationTestSuite.Main.Utilities;
-using MapsNavigationTestSuite.Tests.Steps;
-using OpenQA.Selenium.Appium.Android.Enums;
-using OpenQA.Selenium.Appium.iOS;
+﻿using OpenQA.Selenium.Appium.Android.Enums;
 
 namespace MapsNavigationTestSuite.Main.Pages
 {
     public class MapsMobilePage
     {
-        private readonly IWebDriver _driver;
-        private readonly AppiumDriverSetup _driverSetup = new();
         private readonly WebDriverWait _wait;
         private readonly bool _isAndroid;
 
-        public MapsMobilePage()
+        public MapsMobilePage(IWebDriver driver)
         {
-            _driver = (AppiumDriver)_driverSetup.InitializeDriver("mobile");;
-            _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
-            _isAndroid = _driver is AndroidDriver;
+            _wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            _isAndroid = driver is AndroidDriver;
         }
         
-        //public IWebElement DirectionsButton => _driver.FindElement(By.CssSelector("button[aria-label='Directions']"));
         private IWebElement StartLocationInput => _wait.Until(drv => drv.FindElement(
             _isAndroid
                 ? MobileBy.AndroidUIAutomator("new UiSelector().text(\"Choose start location\")")
-                : MobileBy.AccessibilityId("Start Location")
+                : MobileBy.AccessibilityId("WaypointSearchField")
         ));
 
         public IWebElement DestinationInput => _wait.Until(drv => drv.FindElement(
             _isAndroid
                 ? MobileBy.AndroidUIAutomator("new UiSelector().text(\"Choose destination\")")
-                : MobileBy.AccessibilityId("Choose destination")
+                : MobileBy.AccessibilityId("MapsSearchTextField")
         ));
         
-        // public IWebElement DirectionsPane => _driver.FindElement(By.Id("directions-panel"));
         public IWebElement DirectionsModeTabs => _wait.Until(drv => drv.FindElement(
             _isAndroid
                 ? By.Id("com.google.android.apps.maps:id/directions_mode_tabs")
-                : MobileBy.AccessibilityId("Choose destination")));
+                : MobileBy.AccessibilityId("TransportTypePicker")));
         
         public IWebElement DirectionsButton => _wait.Until(drv => drv.FindElement(
             _isAndroid
                 ? By.Id("com.google.android.apps.maps:id/on_map_directions_button")
-                : MobileBy.AccessibilityId("Directions")));
-
-        public void NavigateToGoogleMaps()
-        {
-            _driver.Navigate().GoToUrl("https://www.google.com/maps");
-            // Report.test.Info("Open Google Maps Web Page");
-        }
+                : MobileBy.AccessibilityId("PlaceSummaryActionButton")));
+        
+        public IWebElement FirstOptionOfStartLoc => _wait.Until(drv => drv.FindElement(
+            _isAndroid
+                ? By.Id("com.google.android.apps.maps:id/on_map_directions_button")
+                : MobileBy.IosClassChain("**/XCUIElementTypeStaticText[`name == \"PlaceSummaryTitleLabel\"`][1]")));
         
         public void EnterStartLocation(string location)
         {
             StartLocationInput.Click();
             StartLocationInput.SendKeys(location);
-            // Report.test.Info("Clicked on element and entered start location");
         }
 
         public void EnterDestination(string destination)
         {
             DestinationInput.Click();
             DestinationInput.SendKeys(destination);
-            // Report.test.Info("Clicked on element and entered destination");
         }
 
-        public void PressEnterKey()
+        public void PressEnterKey(IWebDriver driver)
         {
             if (_isAndroid)
             {
-                ((AndroidDriver)_driver).PressKeyCode(AndroidKeyCode.Enter);
+                ((AndroidDriver)driver).PressKeyCode(AndroidKeyCode.Enter);
             }
             else
             {
-                _driver.FindElement(MobileBy.AccessibilityId("Done"));
+                driver.FindElement(MobileBy.AccessibilityId("Done"));
             }
         }
     }

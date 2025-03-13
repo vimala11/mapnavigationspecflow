@@ -21,7 +21,4 @@
             <LastGenOutput>$(RelativeOutputPath)Tests\Features\%(Filename).feature.cs</LastGenOutput>
         </None>
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Main\Reports\" />
-    </ItemGroup>
 </Project>

@@ -1,76 +1,138 @@
-
-using System.Reflection;
 using AventStack.ExtentReports;
 using AventStack.ExtentReports.Gherkin.Model;
-using AventStack.ExtentReports.Reporter;
+using DemoFrameworkForExtentReports.Utility;
 
 namespace MapsNavigationTestSuite.Main.Pages
 {
-    public class Hooks
+    [Binding]
+    public sealed class Hooks : ExtentReport
     {
-        [Binding]
-        class Hook : TechTalk.SpecFlow.Steps
+        private readonly ScenarioContext _scenarioContext; 
+        private IWebDriver _driver;
+        private AppiumDriverSetup _driverSetup = new();
+
+        public Hooks(ScenarioContext scenarioContext)
         {
-            // private static ExtentTest featureName;
-            private static ExtentTest scenario;
-            private static ExtentReports extent;
+            _scenarioContext = scenarioContext;
+        }
 
+        [BeforeTestRun]
+        public static void BeforeTestRun()
+        {
+            Console.WriteLine("Running before test run...");
+            ExtentReportInit();
+        }
 
-            [BeforeTestRun]
-            public static void InitializeReport()
+        [AfterTestRun]
+        public static void AfterTestRun()
+        {
+            Console.WriteLine("Running after test run...");
+            ExtentReportTearDown();
+        }
+
+        [BeforeFeature]
+        public static void BeforeFeature(FeatureContext featureContext)
+        {
+            Console.WriteLine("Running before feature...");
+            Feature = ExtentReports.CreateTest<Feature>(featureContext.FeatureInfo.Title);
+        }
+
+        [AfterFeature]
+        public static void AfterFeature()
+        {
+            Console.WriteLine("Running after feature...");
+        }
+
+        [BeforeScenario("@web")]
+        public void BeforeScenarioWithTagWeb()
+        {
+            Console.WriteLine("Running inside tagged hooks in a specflow");
+        }
+        
+        [BeforeScenario("@mobile")]
+        public void BeforeScenarioWithTagMobile(ScenarioContext scenarioContext)
+        {
+            Console.WriteLine("Running inside tagged hooks for mobile");
+            _driver = (AppiumDriver)_driverSetup.InitializeDriver("mobile");;
+            _scenarioContext["Driver"] = _driver;
+            
+            Scenario = Feature.CreateNode<Scenario>(scenarioContext.ScenarioInfo.Title);
+        }
+        
+        [BeforeScenario("@web")]
+        public void FirstBeforeScenario(ScenarioContext scenarioContext)
+        {
+            IWebDriver driver = new ChromeDriver();
+            _scenarioContext["Driver"] = driver;
+            driver.Manage().Window.Maximize();
+
+            Scenario = Feature.CreateNode<Scenario>(scenarioContext.ScenarioInfo.Title);
+        }
+
+        [AfterScenario("@web")]
+        public void AfterScenario()
+        {
+            var driver = _scenarioContext["Driver"] as IWebDriver;
+
+            if (driver != null)
             {
-                var htmlReporter = new ExtentHtmlReporter(@"./Main/Reports/");
-                extent = new ExtentReports();
-                extent.AttachReporter(htmlReporter);
-                
+                driver.Close();
             }
+        }
 
-            [AfterTestRun]
-            public static void TearDownReport()
-            {
-                extent.Flush();
-            }
+        [AfterStep]
+        public void AfterStep(ScenarioContext scenarioContext)
+        {
+            Console.WriteLine("Running after step....");
+            string stepType = scenarioContext.StepContext.StepInfo.StepDefinitionType.ToString();
+            string stepName = scenarioContext.StepContext.StepInfo.Text;
 
-            [AfterStep]
-            public void InsertReportingSteps(ScenarioContext sc)
+            var driver = _scenarioContext["Driver"] as IWebDriver;
+
+            //When scenario passed
+            if (scenarioContext.TestError == null)
             {
-                //scenario = extent.CreateTest(sc.ScenarioInfo.Description);
-                var stepType = ScenarioStepContext.Current.StepInfo.StepDefinitionType.ToString();
-                PropertyInfo pInfo = typeof(ScenarioContext).GetProperty("ScenarioExecutionStatus",
-                    BindingFlags.Instance | BindingFlags.Public);
-                MethodInfo getter = pInfo.GetGetMethod(nonPublic: true);
-                object TestResult = getter.Invoke(sc, null);
-                if (sc.TestError == null)
+                if (stepType == "Given")
                 {
-                    if (stepType == "Given")
-                        scenario.CreateNode<Given>(ScenarioStepContext.Current.StepInfo.Text);
-                    else if (stepType == "When")
-                        scenario.CreateNode<When>(ScenarioStepContext.Current.StepInfo.Text);
-                    else if (stepType == "Then")
-                        scenario.CreateNode<Then>(ScenarioStepContext.Current.StepInfo.Text);
-                    else if (stepType == "And")
-                        scenario.CreateNode<And>(ScenarioStepContext.Current.StepInfo.Text);
+                    Scenario.CreateNode<Given>(stepName);
                 }
-
-                if (sc.TestError != null)
+                else if (stepType == "When")
                 {
-                    if (stepType == "Given")
-                        scenario.CreateNode<Given>(ScenarioStepContext.Current.StepInfo.Text)
-                            .Fail(sc.TestError.Message);
-                    if (stepType == "When")
-                        scenario.CreateNode<When>(ScenarioStepContext.Current.StepInfo.Text).Fail(sc.TestError.Message);
-                    if (stepType == "Then")
-                        scenario.CreateNode<Then>(ScenarioStepContext.Current.StepInfo.Text).Fail(sc.TestError.Message);
-                    if (stepType == "And")
-                        scenario.CreateNode<And>(ScenarioStepContext.Current.StepInfo.Text).Fail(sc.TestError.Message);
+                    Scenario.CreateNode<When>(stepName);
+                }
+                else if (stepType == "Then")
+                {
+                    Scenario.CreateNode<Then>(stepName);
+                }
+                else if (stepType == "And")
+                {
+                    Scenario.CreateNode<And>(stepName);
                 }
             }
 
-            [BeforeScenario]
-            public static void BeforeFeature(FeatureContext featurecontext)
+            //When scenario fails
+            if (scenarioContext.TestError != null)
             {
-                // featureName = extent.CreateTest(featurecontext.FeatureInfo.Title);
-                scenario = extent.CreateTest(TestContext.CurrentContext.Test.Name);
+                if (stepType == "Given")
+                {
+                    Scenario.CreateNode<Given>(stepName).Fail(scenarioContext.TestError.Message,
+                        MediaEntityBuilder.CreateScreenCaptureFromPath(AddScreenshot(driver, scenarioContext)).Build());
+                }
+                else if (stepType == "When")
+                {
+                    Scenario.CreateNode<When>(stepName).Fail(scenarioContext.TestError.Message,
+                        MediaEntityBuilder.CreateScreenCaptureFromPath(AddScreenshot(driver, scenarioContext)).Build());
+                }
+                else if (stepType == "Then")
+                {
+                    Scenario.CreateNode<Then>(stepName).Fail(scenarioContext.TestError.Message,
+                        MediaEntityBuilder.CreateScreenCaptureFromPath(AddScreenshot(driver, scenarioContext)).Build());
+                }
+                else if (stepType == "And")
+                {
+                    Scenario.CreateNode<And>(stepName).Fail(scenarioContext.TestError.Message,
+                        MediaEntityBuilder.CreateScreenCaptureFromPath(AddScreenshot(driver, scenarioContext)).Build());
+                }
             }
         }
     }
